@@ -1,5 +1,5 @@
 -- -*- mode: haskell; -*-
-{-# OPTIONS -fglasgow-exts #-}
+{-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables, EmptyDataDecls #-}
 
 module Database.HDBC.MySQL.Connection
     (connectMySQL, MySQLConnectInfo(..), defaultMySQLConnectInfo, Connection)
@@ -122,7 +122,7 @@ connectMySQL info = do
 
         -- HDBC assumes that there is no such thing as auto-commit.
         -- So we'll turn it off here and start our first transaction.
-        mysql_autocommit mysql_ 0
+        _ <- mysql_autocommit mysql_ 0
 
         mysql__ <- newForeignPtr mysql_close mysql_
         doStartTransaction mysql__
@@ -671,7 +671,7 @@ doStartTransaction = doQuery "START TRANSACTION"
 doGetTables :: ForeignPtr MYSQL -> IO [String]
 doGetTables mysql__ = do
   stmt <- newStatement mysql__ "SHOW TABLES"
-  Types.execute stmt []
+  _    <- Types.execute stmt []
   rows <- unfoldRows stmt
   Types.finish stmt
   return $ map (fromSql . head) rows
@@ -686,7 +686,7 @@ doGetTables mysql__ = do
 doDescribeTable :: ForeignPtr MYSQL -> String -> IO [(String, ColTypes.SqlColDesc)]
 doDescribeTable mysql__ table = do
   stmt <- newStatement mysql__ ("DESCRIBE " ++ table)
-  Types.execute stmt []
+  _    <- Types.execute stmt []
   rows <- unfoldRows stmt
   Types.finish stmt
   return $ map fromRow rows
@@ -831,4 +831,3 @@ foreign import ccall unsafe mysql_query
 
 foreign import ccall unsafe memset
     :: Ptr () -> CInt -> CSize -> IO ()
-
