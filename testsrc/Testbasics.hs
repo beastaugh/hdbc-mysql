@@ -138,8 +138,7 @@ testWithTransaction = dbTestCase (\dbh ->
        fetchAllRows qrysth >>= (assertEqual "initial commit" [[toSql "0"]])
        
        -- Let's try a rollback.
-       try $ withTransaction dbh (\_ -> do executeMany sth rows
-                                           fail "Foo")
+       try $ withTransaction dbh (const $ executeMany sth rows >> fail "Foo") :: IO (Either SomeException a)
        execute qrysth []
        fetchAllRows qrysth >>= (assertEqual "rollback" [[SqlString "0"]])
 
